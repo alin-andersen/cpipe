@@ -69,8 +69,13 @@ void cpipe_select(cpipe_type type)
 		color_pipe = cpipe_RAINBOW;
 		break;
 	case BRAINFUCK:
-		printf("GAY");
 		color_pipe = cpipe_BRAINFUCK;
+		break;
+	case LINEBOW:
+		color_pipe = cpipe_LINEBOW;
+		break;
+	case COLUMNBOW:
+		color_pipe = cpipe_COLUMNBOW;
 		break;
 	default:
 		break;
@@ -89,11 +94,11 @@ void cpipe_colorize(FILE* in, FILE* out)
 	while(1)
 	{
 		read = fread(buffer, sizeof(char), 1, in);
-		if(read == 0)
+		if(read == 0 || read == -1)
 			break;
 
 		if(color_pipe != 0)
-			color_pipe(out, pos, line_pos, line_offset);
+			color_pipe(out, &pos, &line_pos, &line_offset);
 
 		fprintf(out, "%s", buffer);
 		pos++;
@@ -103,73 +108,86 @@ void cpipe_colorize(FILE* in, FILE* out)
 		{
 			line_offset++;
 			line_pos = 0;
+			fflush(out);
 		}
 	}
 	
 	fprintf(out, reset);
+	fflush(out);
+	
 	free(buffer);
 }
 
-static unsigned int color = 0;
-static int mode = 0;
-
-inline void cpipe_RAINBOW(FILE* out, uint64_t pos, unsigned line_pos, unsigned int line_offset)
+static inline void cpipe_write_color(FILE* stream, unsigned int color)
 {
-	if(mode = 0)
-		color = (line_pos - line_offset) % 14;
-	else
-		color = (line_pos + line_offset) % 14;
-	
 	switch(color)
 	{
 	case 0:
-		fprintf(out, color_red);
+		fprintf(stream, color_red);
 		break;
 	case 1:
-		fprintf(out, color_lightred);
+		fprintf(stream, color_lightred);
 		break;
 	case 2:
-		fprintf(out, color_green);
+		fprintf(stream, color_green);
 		break;
 	case 3:
-		fprintf(out, color_lightgreen);
+		fprintf(stream, color_lightgreen);
 		break;
 	case 4:
-		fprintf(out, color_brown);
+		fprintf(stream, color_brown);
 		break;
 	case 5:
-		fprintf(out, color_yellow);
+		fprintf(stream, color_yellow);
 		break;
 	case 6:
-		fprintf(out, color_blue);
+		fprintf(stream, color_blue);
 		break;
    	case 7:
-		fprintf(out, color_lightblue);
+		fprintf(stream, color_lightblue);
 		break;
 	case 8:
-		fprintf(out, color_purple);
+		fprintf(stream, color_purple);
 		break;
 	case 9:
-		fprintf(out, color_lightpurple);
+		fprintf(stream, color_lightpurple);
 		break;
 	case 10:
-		fprintf(out, color_darkcyan);
+		fprintf(stream, color_darkcyan);
 		break;
 	case 11:
-		fprintf(out, color_cyan);
+		fprintf(stream, color_cyan);
 	   	break;
 	case 12:
-		fprintf(out, color_lightgray);
+		fprintf(stream, color_lightgray);
 		break;
 	case 13:
-		fprintf(out, color_white);
+		fprintf(stream, color_white);
 		break;
 	}
 }
 
-inline void cpipe_BRAINFUCK(FILE* out, uint64_t pos, unsigned line_pos, unsigned int line_offset)
+void cpipe_RAINBOW(FILE* out, uint64_t* pos, unsigned int* line_pos, unsigned int* line_offset)
 {
-	color = (pos + line_pos * line_offset) % 21;
+	color = ((*line_pos) + (*line_offset)) % 14;
+	cpipe_write_color(out, color);
+}
+
+void cpipe_LINEBOW(FILE* out, uint64_t* pos, unsigned int* line_pos, unsigned int* line_offset)
+{
+	color = (*line_offset) % 14;
+	cpipe_write_color(out, color);
+}
+
+void cpipe_COLUMNBOW(FILE* out, uint64_t* pos, unsigned int* line_pos, unsigned int* line_offset)
+{
+	color = (*line_pos) % 14;
+	cpipe_write_color(out, color);
+}
+
+void cpipe_BRAINFUCK(FILE* out, uint64_t* pos, unsigned int* line_pos, unsigned int* line_offset)
+{
+	color = ((*pos) + (*line_pos) * (*line_offset)) % 21;
 	
 	switch(color)
 	{

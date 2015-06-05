@@ -3,8 +3,6 @@
 #include <string.h>
 #include <stdint.h>
 
-static void(*color_pipe)(FILE* file, uint64_t pos, unsigned int line_pos, unsigned int line_offset) = 0;
-
 static char* reset =					"\e[0;0m";
 
 static char* color_black =				"\e[0;30m";
@@ -36,15 +34,27 @@ static char* underline_white =			"\e[4;37m";
 typedef enum
 {
 	RAINBOW =		0,
-	BRAINFUCK =		1,
-	LSD = 			2,
-	GAY = 			3,
-	MATRIX = 		4
+	LINEBOW =		1,
+	COLUMNBOW = 	2,
+	BRAINFUCK =		3
 } cpipe_type;
 
 void cpipe_test(FILE* out);
 void cpipe_select(cpipe_type type);
 void cpipe_colorize(FILE* in, FILE* out);
 
-static inline void cpipe_RAINBOW(FILE* out, uint64_t pos, unsigned int line_pos, unsigned int line_offset);
-static inline void cpipe_BRAINFUCK(FILE* out, uint64_t pos, unsigned int line_pos, unsigned int line_offset);
+static unsigned int color = 0;
+static unsigned int mode  = 0;
+static unsigned int buf   = 0;
+
+static inline void cpipe_write_colors(FILE* stream, unsigned int color);
+static inline void cpipe_write_full(FILE* stream, unsigned int id);
+
+/* color pipes */
+
+static void(*color_pipe)(FILE* file, uint64_t* pos, unsigned int* line_pos, unsigned int* line_offset) = 0;
+
+static void cpipe_RAINBOW(FILE* out, uint64_t* pos, unsigned int* line_pos, unsigned int* line_offset);
+static void cpipe_LINEBOW(FILE* out, uint64_t* pos, unsigned int* line_pos, unsigned int* line_offset);
+static void cpipe_COLUMNBOW(FILE* out, uint64_t* pos, unsigned int* line_pos, unsigned int* line_offset);
+static void cpipe_BRAINFUCK(FILE* out, uint64_t* pos, unsigned int* line_pos, unsigned int* line_offset);
